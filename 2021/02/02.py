@@ -1,5 +1,5 @@
 def read_src():
-    with open("02_a_src.txt", "r") as fh:
+    with open("src.txt", "r") as fh:
         content = fh.readlines()
 
     return content

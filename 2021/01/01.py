@@ -1,5 +1,5 @@
 def task_1():
-    with open("./01_a_src.txt", "r") as fh:
+    with open("./src.txt", "r") as fh:
         lines = fh.readlines()
 
     task_data = [int(line) for line in lines]
@@ -18,7 +18,7 @@ def task_1():
 
 
 def task_2():
-    with open("./01_a_src.txt", "r") as fh:
+    with open("./src.txt", "r") as fh:
         lines = fh.readlines()
 
     task_data_shift_f = [int(line) for line in lines][2:]
