@@ -83,10 +83,12 @@ def task_2():
                 bit = int(bit)
                 ox_r = (ox_r << 1) | bit
             break
+        if len(filtered_lines) <= 0:
+            continue
         depth += 1
         most_common = calc_mcb(filtered_lines)
     else:
-        print("can't find ox")
+        raise Exception("can't find ox")
 
     depth = 0
     filtered_lines = lines
@@ -101,13 +103,13 @@ def task_2():
                 co_r = (co_r << 1) | bit
             break
         if len(filtered_lines) <= 0:
-            raise Exception
+            continue
 
         depth += 1
         less_common = calc_lcb(filtered_lines)
 
     else:
-        print("can't find co")
+        raise Exception("can't find co")
 
     print(f"ox_r: {ox_r} co_r: {co_r} product: {ox_r*co_r}")
 
