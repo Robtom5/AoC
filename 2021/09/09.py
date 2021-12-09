@@ -152,7 +152,6 @@ def task_2():
 
 
 def print_map():
-    DEBUG = True
     content = read_src()
     flat_map = [int(x) for y in content for x in y.strip()]
     width = len(content[0].strip())
@@ -163,6 +162,8 @@ def print_map():
 
 if __name__ == "__main__":
     DEBUG = False
+    print_map()
+
     task_1()
 
     task_2()
