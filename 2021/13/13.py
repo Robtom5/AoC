@@ -7,7 +7,6 @@ coord_regex = re.compile(r"^(?P<x>\d+),(?P<y>\d+)$")
 
 
 def read_src():
-    # NB: No big caves touch other big caves
     src_file = "example.txt" if DEBUG else "src.txt"
     with open(src_file, "r") as fh:
         content = fh.readlines()
