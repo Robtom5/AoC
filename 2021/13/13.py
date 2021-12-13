@@ -26,36 +26,20 @@ def read_src():
             coords.add((int(coord_match.group("x")), int(coord_match.group("y"))))
         else:
             fold_match = fold_regex.match(line)
-            folds.append((fold_match.group("axis"), int(fold_match.group("val"))))
+            folds.append(
+                (fold_match.group("axis") == "y", int(fold_match.group("val")))
+            )
     return coords, folds
 
 
-def apply_fold(fold, points):
-    axis, val = fold
-    if axis == "y":
-        horiz = True
-    else:
-        horiz = False
-
-    if horiz:
-        new_pts = set([])
-        for pt in points:
-            x, y = pt
-            if y == val:
-                continue
-            if y > val:
-                y = 2 * val - y
-            new_pts.add((x, y))
-    else:
-        new_pts = set([])
-        for pt in points:
-            x, y = pt
-            if x == val:
-                continue
-            if x > val:
-                x = 2 * val - x
-            new_pts.add((x, y))
-    return new_pts
+def apply_fold(pt, fold):
+    horiz, val = fold
+    x, y = pt
+    if horiz and y > val:
+        y = 2 * val - y
+    elif not horiz and x > val:
+        x = 2 * val - x
+    return (x, y)
 
 
 def print_grid(coords):
@@ -77,7 +61,7 @@ def print_grid(coords):
 def task_1():
     coords, folds = read_src()
 
-    coords = apply_fold(folds[0], coords)
+    coords = {apply_fold(pt, folds[0]) for pt in coords}
 
     print(f"task 1: {len(coords)}")
 
@@ -86,7 +70,7 @@ def task_2():
     coords, folds = read_src()
 
     for fold in folds:
-        coords = apply_fold(fold, coords)
+        coords = {apply_fold(pt, fold) for pt in coords}
     print(f"task 2: ")
     print_grid(coords)
 
