@@ -66,16 +66,20 @@ def print_around_point(index, pt_list, width):
 
 
 def point_dir(index, pt_list, width):
-    l = "\U0001f868"
-    u = "\U0001f869"
-    r = "\U0001f86a"
-    d = "\U0001f86b"
-    ul = "\U0001f86c"
-    ur = "\U0001f86d"
-    dr = "\U0001f86e"
-    dl = "\U0001f86f"
-    bot = "X"
-    top = " "
+    intensity = f"\u001b[38;5;{255-2*pt_list[index]}m"
+    # intensity = f"\u001b[38;5;{236+2*pt_list[index]}m"
+    end = "\033[0m"
+
+    l = intensity + "\U0001f868" + end
+    u = intensity + "\U0001f869" + end
+    r = intensity + "\U0001f86a" + end
+    d = intensity + "\U0001f86b" + end
+    ul = intensity + "\U0001f86c" + end
+    ur = intensity + "\U0001f86d" + end
+    dr = intensity + "\U0001f86e" + end
+    dl = intensity + "\U0001f86f" + end
+    bot = intensity + "X"
+    top = intensity + " "
     l_pt, r_pt, u_pt, d_pt = surround_greater(index, pt_list, width)
 
     if pt_list[index] == 9:
@@ -106,10 +110,6 @@ def point_dir(index, pt_list, width):
         return l
     else:
         return top
-
-    print(f" {d if u_pt else u} ")
-    print(f"{r if l_pt else l} {l if r_pt else r}")
-    print(f" {u if d_pt else d} ")
 
 
 def task_1():
