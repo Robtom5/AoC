@@ -38,7 +38,6 @@ def dijkstra(cavern_map):
 
     next_nodes = {(0, 0): 0}
     while unvisited:
-        # node = min(unvisited, key=unvisited.get)
         node = min(next_nodes, key=next_nodes.get)
         next_nodes.pop(node)
 
@@ -82,13 +81,6 @@ def task_1():
 
 def task_2():
     cavern_map = read_src()
-    # width, height = cavern_map.shape
-    # first_chunk = dijkstra_chunk(cavern_map)
-
-    # last_rows = [first_chunk[0]]
-    # prev_last_col = first_chunk[1]
-    # print(first_chunk[0])
-    # print(first_chunk[1])
     chunk = cavern_map.copy()
     for _ in range(4):
         chunk = increment_risk(chunk)
@@ -104,6 +96,6 @@ def task_2():
 
 
 if __name__ == "__main__":
-    # DEBUG = False
+    DEBUG = False
     task_1()
     task_2()
