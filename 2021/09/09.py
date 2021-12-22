@@ -1,6 +1,17 @@
-from math import prod
-
 DEBUG = True
+import sys
+
+if sys.version_info < (3, 8):
+
+    def prod(iterable):
+        product = 1
+        for i in iterable:
+            product *= i
+        return product
+
+
+else:
+    from math import prod
 
 
 def read_src():

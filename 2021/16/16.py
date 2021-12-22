@@ -1,4 +1,17 @@
 DEBUG = True
+import sys
+
+if sys.version_info < (3, 8):
+
+    def prod(iterable):
+        product = 1
+        for i in iterable:
+            product *= i
+        return product
+
+
+else:
+    from math import prod
 
 SCALE = 16
 BIT_SZ = 4
@@ -55,13 +68,6 @@ def eq(iterable):
         return iterable[0] == iterable[1]
     else:
         raise Exception
-
-
-def prod(iterable):
-    product = 1
-    for i in iterable:
-        product *= i
-    return product
 
 
 class Packet:
