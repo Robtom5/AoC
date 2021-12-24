@@ -148,6 +148,11 @@ def task_1():
 
 
 def task_2():
+    # To remove the brute force. Need to check if the algorithm will
+    # cause empty cells to toggle. then if so, need to make sure that
+    # every other application of algorithm understands that all values
+    # outside of the image bounds will be lit
+
     alg, grid = read_src()
     for x in range(50):
         grid = grid.apply_algorithm(alg)
