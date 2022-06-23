@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 PYTHONTEMPLATE = """DEBUG = True
 
@@ -30,15 +30,23 @@ if __name__ == "__main__":
 
 years = range(2015, 2021)
 days = range(1, 26)
-other_files = ["example.txt", "src.txt"]
+other_files = {
+    "example.txt": "",
+    "src.txt": "",
+}
 
 for year in years:
     for day in days:
         padded_day = f"{day:0>2}"
-        day_path = os.path.join(str(year), padded_day)
-        os.makedirs(day_path, exist_ok=True)
-        with open(os.path.join(day_path, f"{padded_day}.py"), "w") as fh:
-            fh.write(PYTHONTEMPLATE)
+        day_path = Path(str(year), padded_day)
+        day_path.mkdir(exist_ok=True)
+        soln_file = Path(day_path, f"{padded_day}.py")
+        if not soln_file.exists():
+            with open(soln_file, "w") as fh:
+                fh.write(PYTHONTEMPLATE)
+
         for other_file in other_files:
-            with open(os.path.join(day_path, other_file), "w") as fh:
-                fh.write("")
+            file_path = Path(day_path, other_file)
+            if not file_path.exists():
+                with open(file_path, "w") as fh:
+                    fh.write(other_files[other_file].format(day=padded_day))
