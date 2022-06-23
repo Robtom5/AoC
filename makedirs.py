@@ -28,19 +28,21 @@ if __name__ == "__main__":
 
 """
 
-years = range(2015, 2021)
+years = range(2015, 2022)
 days = range(1, 26)
 other_files = {
     "example.txt": "",
     "src.txt": "",
+    "__init__.py": "from soln import task_1, task_2",
 }
 
 for year in years:
+    year_path = Path(f"AOC_{str(year)}")
     for day in days:
         padded_day = f"{day:0>2}"
-        day_path = Path(str(year), padded_day)
+        day_path = Path(year_path, f"Day{padded_day}")
         day_path.mkdir(exist_ok=True)
-        soln_file = Path(day_path, f"{padded_day}.py")
+        soln_file = Path(day_path, "soln.py")
         if not soln_file.exists():
             with open(soln_file, "w") as fh:
                 fh.write(PYTHONTEMPLATE)
