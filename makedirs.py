@@ -1,6 +1,6 @@
 from pathlib import Path
 
-PYTHONTEMPLATE = """DEBUG = True
+PYTHONTEMPLATE = """DEBUG = False
 
 
 def read_src():
@@ -13,18 +13,23 @@ def read_src():
 
 def task_1():
     content = read_src()
-    print(f"task 1: ")
+
+    res = None
+    return res
 
 
 def task_2():
     content = read_src()
-    print(f"task 2: ")
+
+    res = None
+    return res
+
 
 
 if __name__ == "__main__":
-    # DEBUG = False
-    task_1()
-    task_2()
+    DEBUG = True
+    print(f"task 1: {task_1()}")
+    print(f"task 2: {task_2()}")
 
 """
 
