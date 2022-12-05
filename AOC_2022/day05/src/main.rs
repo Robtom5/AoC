@@ -1,6 +1,6 @@
 use std::fs;
+use regex::Regex;
 
-// const priorities:Vec<char>= "ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().collect(); 
 const ASCII_UPPER:[char; 26]= [
     'A', 'B', 'C', 'D', 'E',
     'F', 'G', 'H', 'I', 'J',
@@ -51,6 +51,38 @@ fn init_stacks(contents: &str) -> Vec<Vec<u16>>{
     return layout;
 }
 
+fn parse_instruction(line: &str) -> Result<(u16, usize, usize), &str>{
+    let re = Regex::new(r"^move (?P<volume>\d+) from (?P<src>\d+) to (?P<dst>\d+)$").unwrap();
+    return match re.is_match(line){
+        true => Ok(split_cap(re.captures_iter(line))),
+        false => Err("No valid instructions"),
+    }
+}   
+
+fn split_cap(mut captures: regex::CaptureMatches) -> (u16, usize, usize) {
+    let cap = captures.next().unwrap();
+    let volume = &cap["volume"].parse::<u16>().unwrap();
+    let src = &cap["src"].parse::<usize>().unwrap() - 1;
+    let dst = &cap["dst"].parse::<usize>().unwrap() - 1;
+    return (*volume, src, dst)
+}
+
+fn apply_instructions(stacks: &mut Vec<Vec<u16>>, contents: &str){
+    let lines = contents.lines();
+
+    for line in lines {
+        let (volume, src, dst) = match parse_instruction(line){
+            Ok(n) => n,
+            Err(_e) => continue,
+        };
+
+        for _i in 0..volume {
+            let box_to_move = stacks[src].pop().unwrap();
+            stacks[dst].push(box_to_move);
+        }
+    }
+}
+
 fn char_to_int(c:char) -> u16{
     return ASCII_UPPER
         .iter()
@@ -64,6 +96,7 @@ fn int_to_char(i:u16) -> char {
     return ASCII_UPPER[i as usize];
 }
 
+
 fn main() {
     let fp = if cfg!(debug_assertions) {
         "data/example"
@@ -74,13 +107,22 @@ fn main() {
     let contents = fs::read_to_string(fp)
         .expect("Should be able to read file");
 
-    let stacks = init_stacks(&contents);
+    let mut stacks = init_stacks(&contents);
+
+    apply_instructions(&mut stacks, &contents);
+
+    let mut final_str = "".to_owned();
 
     for stack in stacks {
+        let mut ch: char = '!';
         for c in stack{
-            let ch = int_to_char(c);
+            ch = int_to_char(c);
             print!("{ch} ")
         }
+        final_str.push(ch);
+
         println!("")
-    }    
+    }   
+
+    println!("Final Str {final_str}")
 }
