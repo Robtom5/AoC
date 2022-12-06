@@ -12,7 +12,7 @@ const ASCII_UPPER:[char; 26]= [
 
 
 
-fn init_stacks(contents: &str) -> Vec<Vec<u16>>{
+fn init_stacks(contents: &str) -> Vec<Vec<char>>{
     let mut lines = contents
         .lines()
         .peekable();
@@ -23,7 +23,7 @@ fn init_stacks(contents: &str) -> Vec<Vec<u16>>{
         .unwrap();
 
     let number_of_stacks = (first_line.len() + 1) / 4;
-    let mut layout: Vec<Vec<u16>> = Vec::with_capacity(number_of_stacks as usize);
+    let mut layout: Vec<Vec<char>> = Vec::with_capacity(number_of_stacks as usize);
     for _i in 0..number_of_stacks{
         layout.push(Vec::new());
     }
@@ -35,14 +35,12 @@ fn init_stacks(contents: &str) -> Vec<Vec<u16>>{
                 x if x < 4 => x,
                 _ => 4, 
             };
-            // let chars = match line_len - i {
-            //     n if n < 4 => &mut line[i..i+n].chars(),
-            // }
+            
             let chars = &mut line[i..i+diff].chars();
             let box_char = chars.nth(1).unwrap();
             let stack_id: usize = i /4;
             match ASCII_UPPER.iter().any(|&x| x == box_char){  
-                true => layout[stack_id].insert(0, char_to_int(box_char)),
+                true => layout[stack_id].insert(0, box_char),
                 false => continue,
             };
         }
@@ -67,7 +65,7 @@ fn split_cap(mut captures: regex::CaptureMatches) -> (u16, usize, usize) {
     return (*volume, src, dst)
 }
 
-fn apply_instructions(stacks: &mut Vec<Vec<u16>>, contents: &str){
+fn apply_instructions(stacks: &mut Vec<Vec<char>>, contents: &str){
     let lines = contents.lines();
 
     for line in lines {
@@ -83,17 +81,23 @@ fn apply_instructions(stacks: &mut Vec<Vec<u16>>, contents: &str){
     }
 }
 
-fn char_to_int(c:char) -> u16{
-    return ASCII_UPPER
-        .iter()
-        .position(|&x| x == c)
-        .expect("Can't find box character")
-        .try_into()
-        .unwrap()
-}
+fn apply_instructions_2(stacks: &mut Vec<Vec<char>>, contents: &str){
+    let lines = contents.lines();
 
-fn int_to_char(i:u16) -> char {
-    return ASCII_UPPER[i as usize];
+    for line in lines {
+        let (volume, src, dst) = match parse_instruction(line){
+            Ok(n) => n,
+            Err(_e) => continue,
+        };
+        let mut boxes_to_move: Vec<char> = Vec::new();
+        for _i in 0..volume {
+            let box_to_move = stacks[src].pop().unwrap();
+            boxes_to_move.insert(0, box_to_move);
+        }
+        for _box in boxes_to_move{
+            stacks[dst].push(_box);
+        }
+    }
 }
 
 
@@ -116,13 +120,33 @@ fn main() {
     for stack in stacks {
         let mut ch: char = '!';
         for c in stack{
-            ch = int_to_char(c);
-            print!("{ch} ")
+            #[cfg(debug_assertions)]
+            print!("{c} ");
+            ch = c;
         }
         final_str.push(ch);
-
+        #[cfg(debug_assertions)]
         println!("")
     }   
 
-    println!("Final Str {final_str}")
+    println!("1st Str {final_str}");
+
+    let mut stacks_2 = init_stacks(&contents);
+    apply_instructions_2(&mut stacks_2, &contents);
+
+    let mut final_str = "".to_owned();
+
+    for stack in stacks_2 {
+        let mut ch: char = '!';
+        for c in stack{
+            #[cfg(debug_assertions)]
+            print!("{c} ");
+            ch = c;
+        }
+        final_str.push(ch);
+        #[cfg(debug_assertions)]
+        println!("")
+    }   
+
+    println!("2nd Str {final_str}")
 }
