@@ -85,74 +85,65 @@ fn day02(contents: &str) -> (String, String) {
 }
 
 fn day03(contents: &str) -> (String, String) {
-    fn parse_backpack_contents(content: &str) -> Vec<char> {
-        let mut extra_items: Vec<char> = Vec::new();
+    trait BitEncode {
+        fn to_bit(&self) -> u64;
+    }
+
+    impl BitEncode for char {
+        fn to_bit(&self) -> u64 {
+            return match self.is_ascii_uppercase() {
+                true => self.to_digit(36).unwrap() + 17,
+                false => self.to_digit(36).unwrap() - 9,
+            } as u64;
+        }
+    }
+
+    impl BitEncode for str {
+        fn to_bit(&self) -> u64 {
+            let mut bit: u64 = 0b0;
+            for c in self.chars() {
+                bit |= 1 << c.to_bit();
+            }
+            return bit;
+        }
+    }
+
+    fn find_duplicates(content: &str) -> u32 {
+        let mut priority_sum = 0;
         let lines = content.lines();
+
         for line in lines {
             let len = line.chars().count() / 2;
-            let mut fh = HashSet::new();
-            for c in line[0..len].chars() {
-                fh.insert(c);
-            }
-            let mut sh = HashSet::new();
-            for c in line[len..].chars() {
-                sh.insert(c);
-            }
 
-            let diff = fh.intersection(&sh).collect::<Vec<&char>>();
+            let left = line[0..len].to_bit();
+            let right = line[len..].to_bit();
 
-            match diff.len() {
-                1 => extra_items.push(*diff[0]),
+            let diff: u64 = left & right;
+
+            priority_sum += match diff & diff - 1 {
+                0 => diff.ilog2(),
                 _ => panic!(""),
             }
         }
-        return extra_items;
+        return priority_sum;
     }
 
-    fn find_badge(content: &str) -> Vec<char> {
-        let mut badges: Vec<char> = Vec::new();
+    fn find_badge(content: &str) -> u32 {
+        let mut badges_sum = 0;
         let lines: Vec<&str> = content.lines().collect();
         for i in (0..lines.len()).step_by(3) {
-            let l1: HashSet<char> = HashSet::from_iter(lines[i].chars());
-            let l2: HashSet<char> = HashSet::from_iter(lines[i + 1].chars());
-            let l3: HashSet<char> = HashSet::from_iter(lines[i + 2].chars());
-
-            let diff1 = l1.intersection(&l2);
-            let mut l12 = HashSet::new();
-            for d in diff1 {
-                l12.insert(*d);
-            }
-            let diff2 = l3.intersection(&l12).collect::<Vec<&char>>();
-
-            match diff2.len() {
-                1 => badges.push(*diff2[0]),
+            let diff: u64 = lines[i].to_bit() & lines[i + 1].to_bit() & lines[i + 2].to_bit();
+            badges_sum += match diff & diff - 1 {
+                0 => diff.ilog2(),
                 _ => panic!(""),
             }
         }
-        return badges;
+        badges_sum
     }
 
-    fn prioritise(errors: Vec<char>) -> u32 {
-        let mut total_priorities = 0;
-        let priorities: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            .chars()
-            .collect();
+    let total_score = find_duplicates(&contents);
+    let badge_score = find_badge(&contents);
 
-        for c in errors {
-            let priority = priorities
-                .iter()
-                .position(|&x| x == c)
-                .expect("Can't find {c}");
-            total_priorities += priority as u32 + 1;
-        }
-        return total_priorities;
-    }
-
-    let wrong = parse_backpack_contents(&contents);
-    let total_score = prioritise(wrong);
-
-    let badges = find_badge(&contents);
-    let badge_score = prioritise(badges);
     return (total_score.to_string(), badge_score.to_string());
 }
 
@@ -373,7 +364,7 @@ fn main() {
             Err(_) => continue,
         };
 
-        let (soln1, soln2) = match i {
+        let (_soln1, _soln2) = match i {
             1 => day01(&contents),
             2 => day02(&contents),
             3 => day03(&contents),
@@ -383,6 +374,6 @@ fn main() {
             _ => continue,
         };
 
-        println!("Day {i:02}\t Part 1: {soln1:<16} Part 2: {soln2:<16}");
+        println!("Day {i:02}\t Part 1: {_soln1:<16} Part 2: {_soln2:<16}");
     }
 }
