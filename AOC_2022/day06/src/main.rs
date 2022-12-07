@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 use std::fs;
+use itertools::Itertools;
 
 fn incr_buff_pos(index: usize, buff_sz: usize) -> usize {
     return match index {
@@ -21,11 +21,7 @@ trait Uniq {
 
 impl Uniq for Vec<char> {
     fn is_unique(&self) -> bool {
-        let sh: HashSet<&char> = HashSet::from_iter(self);
-        let hash_cap = sh.len();
-        let my_cap = self.len();
-
-        return hash_cap == my_cap;
+        return self.len() == self.into_iter().unique().count();
     }
 }
 
