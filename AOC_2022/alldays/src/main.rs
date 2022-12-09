@@ -3,6 +3,7 @@ use core::hash::Hasher;
 use itertools::Itertools;
 use regex::Regex;
 use std::cmp::max;
+use std::cmp::min;
 use std::collections::HashSet;
 use std::fs;
 
@@ -352,6 +353,71 @@ fn day06(contents: &str) -> (String, String) {
     return (packet_index.to_string(), message_index.to_string());
 }
 
+fn day07(contents: &str) -> (String, String) {
+    fn relevant_sz((name, sz): &(String, u64), start: &str) -> u64 {
+        match name.starts_with(start) {
+            true => return *sz,
+            false => return 0,
+        }
+    }
+    let mut path: String = "".to_owned();
+    let mut files: Vec<(String, u64)> = Vec::new();
+    let mut dirs: HashSet<String> = HashSet::new();
+
+    for line in contents.lines() {
+        let words: Vec<&str> = line.split(" ").collect();
+        match words[0] {
+            "$" => match words[1] {
+                "cd" => match words[2] {
+                    ".." => {
+                        let (new_path, _) = path.rsplit_once('/').unwrap();
+                        path = new_path.to_string();
+                    }
+                    "/" => {
+                        path = "".to_string();
+                        dirs.insert(path.clone());
+                    }
+                    w => {
+                        let addition = format!("{root}/{dir}", root = path, dir = w);
+                        dirs.insert(addition.clone());
+                        path = addition;
+                    }
+                },
+                _ => continue,
+            },
+            "dir" => continue,
+            sz => {
+                let name = format!("{path}/{file}", path = path, file = words[1]);
+                files.push((name, sz.parse::<u64>().unwrap()));
+            }
+        }
+    }
+
+    const MAX_SZ: u64 = 100000;
+    const TOTAL_DISK_SZ: u64 = 70000000;
+    const MIN_SZ: u64 = 30000000;
+
+    let already_available: u64 =
+        TOTAL_DISK_SZ - files.iter().map(|x| relevant_sz(x, "/")).sum::<u64>();
+    let size_to_delete = MIN_SZ - already_available;
+
+    assert!(MAX_SZ < size_to_delete); // We haven't accounted for this in the match statement so ensure if is is true
+    let mut running_tot = 0;
+    let mut best_min = u64::MAX;
+
+    for d in dirs {
+        let tot_siz: u64 = files.iter().map(|x| relevant_sz(x, &d)).sum();
+
+        match tot_siz {
+            n if n < MAX_SZ => running_tot += n,
+            n if n > size_to_delete => best_min = min(best_min, n),
+            _ => {}
+        }
+    }
+
+    return (running_tot.to_string(), best_min.to_string());
+}
+
 fn day08(contents: &str) -> (String, String) {
     let height: usize = contents.lines().count();
     let width: usize = contents.len() / height - 1; // n lines with n carries
@@ -531,6 +597,7 @@ fn day08(contents: &str) -> (String, String) {
 
     (visible.len().to_string(), best_score.to_string())
 }
+
 fn day09(contents: &str) -> (String, String) {
     #[derive(Eq)]
     struct Point {
@@ -660,6 +727,7 @@ fn day09(contents: &str) -> (String, String) {
 
     (rope_behaviour(&contents, 1), rope_behaviour(&contents, 9))
 }
+
 fn main() {
     for i in 1..25 {
         let fh = match cfg!(debug_assertions) {
@@ -679,6 +747,7 @@ fn main() {
             4 => day04(&contents),
             5 => day05(&contents),
             6 => day06(&contents),
+            7 => day07(&contents),
             8 => day08(&contents),
             9 => day09(&contents),
             _ => continue,
