@@ -44,8 +44,9 @@ fn create_rope() -> Rope {
     }
 }
 
-trait Tail {
+trait RopePhysics {
     fn update_tail(&mut self) -> Point;
+    fn update_head(&mut self, pt: &Point);
 }
 
 trait Distance<Rhs = Self> {
@@ -53,7 +54,7 @@ trait Distance<Rhs = Self> {
 }
 
 // #[allow(unused)]
-impl Tail for Rope {
+impl RopePhysics for Rope {
     fn update_tail(&mut self) -> Point {
         let Point { x: hx, y: hy } = self.head;
 
@@ -70,6 +71,11 @@ impl Tail for Rope {
         self.tail.x = dx;
         self.tail.y = dy;
         create_point_from_coords(dx, dy)
+    }
+
+    fn update_head(&mut self, pt: &Point) {
+        self.head.x = pt.x;
+        self.head.y = pt.y;
     }
 }
 
@@ -109,21 +115,70 @@ fn part1(contents: &str) -> String {
         }
     }
     #[cfg(debug_assertions)]
-    printvisible(&visited, 6, 6);
+    printvisible(&visited, 32, 32);
     visited.len().to_string()
 }
 
 #[cfg(debug_assertions)]
-fn printvisible(set: &HashSet<Point>, width: usize, height: usize) {
-    let blankline = ".".repeat(width) + "\n";
-    let mut blankgrid = blankline.repeat(height);
+fn printvisible(set: &HashSet<Point>, width: i16, height: i16) {
+    let blankline = ".".repeat(width as usize) + "\n";
+    let mut blankgrid = blankline.repeat(height as usize);
+    let origin = (height / 2) * (width + 1) + (width / 2);
     for pt in set {
-        let x_val = pt.x as usize;
-        let y_val = pt.y as usize;
-        let value = y_val * (width + 1) + x_val;
+        let x_val = pt.x;
+        let y_val = pt.y;
+        let value = (y_val * (width + 1) + x_val + origin) as usize;
         blankgrid.replace_range(value..(value + 1), "@");
     }
     println!("{blankgrid}");
+}
+
+fn part2(contents: &str) -> String {
+    const ROPE_LEN: usize = 9;
+    let mut visited: HashSet<Point> = HashSet::new();
+
+    visited.insert(create_point());
+
+    let mut ropes: Vec<Rope> = Vec::with_capacity(ROPE_LEN);
+    for _i in 0..ROPE_LEN {
+        ropes.push(create_rope());
+    }
+
+    for line in contents.lines() {
+        let (dir, dist) = match line.split_once(" ") {
+            Some(n) => n,
+            None => continue,
+        };
+        let dist_val = match dist.parse::<usize>() {
+            Ok(n) => n,
+            Err(_) => continue,
+        };
+
+        // let mut rope = &ropes[0];
+        // let mut tail;
+
+        for _i in 0..dist_val {
+            let mut rope_iter = ropes.iter_mut();
+            let mut rope = rope_iter.next().unwrap();
+            match dir {
+                "R" => rope.head.x += 1,
+                "L" => rope.head.x -= 1,
+                "U" => rope.head.y += 1,
+                "D" => rope.head.y -= 1,
+                _ => panic!("Unknown direction"),
+            };
+
+            let mut last_tail = rope.update_tail();
+            for r in rope_iter {
+                r.update_head(&last_tail);
+                last_tail = r.update_tail();
+            }
+            visited.insert(last_tail);
+        }
+    }
+    #[cfg(debug_assertions)]
+    printvisible(&visited, 32, 32);
+    visited.len().to_string()
 }
 
 #[allow(unused)]
@@ -137,5 +192,6 @@ fn main() {
 
     let contents = fs::read_to_string(fp).expect("Should be able to read file");
     let res1 = part1(&contents);
-    println!("Part 1 {res1}");
+    let res2 = part2(&contents);
+    println!("Part 1 {res1} Part 2 {res2}");
 }
