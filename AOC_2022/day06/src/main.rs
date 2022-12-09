@@ -1,6 +1,8 @@
-use std::fs;
 use itertools::Itertools;
+use std::fs;
 
+// Alternate soln. Track last seen in 26sized array. Then if you go N without updating a position, you found it.
+// IE, reset the count if the last time you saw it was less than N ago
 fn incr_buff_pos(index: usize, buff_sz: usize) -> usize {
     return match index {
         n if n >= buff_sz - 1 => 0,
