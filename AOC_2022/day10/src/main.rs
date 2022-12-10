@@ -17,8 +17,8 @@ fn part1(contents: &str) -> String {
         }
 
         match (register - ((cycle % 40) - 1)).abs() {
-            _n if _n <= 1 => print!("##"),
-            _ => print!(".."),
+            _n if _n <= 1 => print!("██"),
+            _ => print!("  "),
         }
         match word.parse::<i32>() {
             Ok(n) => register += n,
