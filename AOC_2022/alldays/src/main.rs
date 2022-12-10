@@ -728,6 +728,38 @@ fn day09(contents: &str) -> (String, String) {
     (rope_behaviour(&contents, 1), rope_behaviour(&contents, 9))
 }
 
+fn day10(contents: &str) -> (String, String) {
+    let mut cycle: i32 = 0;
+    let mut strength_sum = 0;
+    let mut register: i32 = 1;
+
+    for word in contents.split_whitespace() {
+        cycle += 1;
+
+        match cycle {
+            c if (c + 20) % 40 == 0 => {
+                let strength = register * cycle;
+                strength_sum += strength;
+            }
+            _ => {}
+        }
+
+        match (register - ((cycle % 40) - 1)).abs() {
+            _n if _n <= 1 => print!("██"),
+            _ => print!("  "),
+        }
+        match word.parse::<i32>() {
+            Ok(n) => register += n,
+            Err(_) => {}
+        }
+        if (cycle % 40) == 0 {
+            println!("");
+        }
+    }
+
+    return (strength_sum.to_string(), "⬆".to_string());
+}
+
 fn main() {
     for i in 1..25 {
         let fh = match cfg!(debug_assertions) {
@@ -750,6 +782,7 @@ fn main() {
             7 => day07(&contents),
             8 => day08(&contents),
             9 => day09(&contents),
+            10 => day10(&contents),
             _ => continue,
         };
 
