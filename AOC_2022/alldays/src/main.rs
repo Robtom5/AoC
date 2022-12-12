@@ -29,6 +29,7 @@ fn main() {
             9 => solns06_10::day09(&contents),
             10 => solns06_10::day10(&contents),
             11 => solns11_15::day11(&contents),
+            12 => solns11_15::day12(&contents),
             _ => continue,
         };
 
