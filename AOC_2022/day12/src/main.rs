@@ -29,7 +29,7 @@ impl Pos {
         // println!("{x} {y}  {width} {height}  {:?}", neighbors);
         for (dx, dy) in neighbors {
             // let (X, Y) = (x as i16 + dx, y as i16 + dy);
-            print_pt(&Pos(dx, dy));
+            print_pt(&Pos(dx, dy), '.', 1);
             let s_v = grid[dy][dx];
             match s_v as i16 - pos_value as i16 {
                 diff if diff <= 1 => {
@@ -50,9 +50,14 @@ fn part1(contents: &str) -> String {
     let (height, width) = (map.len() - 1, map[0].len() - 1);
     print_grid(width, height);
     let result = bfs(&src, |p| p.successors(&map), |p| *p == dst);
-    println!("{esc}[55E", esc = 27 as char);
 
-    return (result.expect("no path found").len() - 1).to_string();
+    let unwrapped = result.expect("no path found");
+    let unwrapped_len = unwrapped.len();
+    for node in unwrapped {
+        print_pt(&node, 'x', 10);
+    }
+    // println!("{esc}[43E", esc = 27 as char);
+    return (unwrapped_len - 1).to_string();
 }
 
 fn print_grid(width: usize, height: usize) {
@@ -63,11 +68,14 @@ fn print_grid(width: usize, height: usize) {
     println!("{blankgrid}");
 }
 
-fn print_pt(point: &Pos) {
+fn print_pt(point: &Pos, icon: char, interval: u64) {
     let &Pos(x, y) = point;
-    print!("{esc}[H{esc}[{y};{x}H.{esc}[50E{x} {y}", esc = 27 as char);
-    thread::sleep(time::Duration::from_micros(100));
-    // thread::sleep(time::Duration::from_micros(10));
+    print!(
+        "{esc}[H{esc}[{y};{x}H{icon}{esc}[H{esc}[43E",
+        esc = 27 as char
+    );
+    // thread::sleep(time::Duration::from_micros(interval));
+    thread::sleep(time::Duration::from_micros(interval));
 }
 
 // fn printvisible(pt: Pos, width: i16, height: i16) {
