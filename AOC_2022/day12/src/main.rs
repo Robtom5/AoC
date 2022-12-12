@@ -1,3 +1,4 @@
+use core::cmp::min;
 use pathfinding::prelude::bfs;
 use std::fs;
 use std::{thread, time};
@@ -29,7 +30,7 @@ impl Pos {
         // println!("{x} {y}  {width} {height}  {:?}", neighbors);
         for (dx, dy) in neighbors {
             // let (X, Y) = (x as i16 + dx, y as i16 + dy);
-            print_pt(&Pos(dx, dy), '.', 1);
+            // print_pt(&Pos(dx, dy), '.', 1);
             let s_v = grid[dy][dx];
             match s_v as i16 - pos_value as i16 {
                 diff if diff <= 1 => {
@@ -42,22 +43,35 @@ impl Pos {
     }
 }
 
-fn part1(contents: &str) -> String {
-    let (map, src, dst) = load_map(&contents);
+fn part1(contents: &str) -> (String, String) {
+    let (map, src, dst, starts) = load_map(&contents);
 
     println!("{:?} {:?}", src, dst);
 
     let (height, width) = (map.len() - 1, map[0].len() - 1);
+
     print_grid(width, height);
+
     let result = bfs(&src, |p| p.successors(&map), |p| *p == dst);
 
     let unwrapped = result.expect("no path found");
-    let unwrapped_len = unwrapped.len();
+    let unwrapped_len = unwrapped.len() - 1;
     for node in unwrapped {
         print_pt(&node, 'x', 10);
     }
+    let mut min_dis = unwrapped_len;
+    for start in starts {
+        print_grid(width, height);
+
+        let pos_result = bfs(&start, |p| p.successors(&map), |p| *p == dst);
+        let pos_len = match pos_result {
+            Some(n) => n.len() - 1,
+            None => continue,
+        };
+        min_dis = min(min_dis, pos_len);
+    }
     // println!("{esc}[43E", esc = 27 as char);
-    return (unwrapped_len - 1).to_string();
+    return ((unwrapped_len).to_string(), min_dis.to_string());
 }
 
 fn print_grid(width: usize, height: usize) {
@@ -92,7 +106,7 @@ fn print_pt(point: &Pos, icon: char, interval: u64) {
 //     println!("{blankgrid}");
 // }
 
-fn load_map(contents: &str) -> (Vec<Vec<u8>>, Pos, Pos) {
+fn load_map(contents: &str) -> (Vec<Vec<u8>>, Pos, Pos, Vec<Pos>) {
     let height: usize = contents.lines().count();
     let width: usize = contents.len() / height - 1; // n lines with n carries
 
@@ -100,11 +114,16 @@ fn load_map(contents: &str) -> (Vec<Vec<u8>>, Pos, Pos) {
     let mut grid = vec![vec![0u8; width]; height];
     let mut src: Pos = Pos(0, 0);
     let mut dst: Pos = Pos(0, 0);
+    let mut starts: Vec<Pos> = Vec::new();
 
     for y in 0..height {
         for x in 0..width {
             let index = ((width + 1) * y) + x;
             let value: char = match contents.chars().nth(index).unwrap() {
+                'a' => {
+                    starts.push(Pos(x, y));
+                    'a'
+                }
                 START_CHAR => {
                     src = Pos(x, y);
                     'a'
@@ -119,7 +138,7 @@ fn load_map(contents: &str) -> (Vec<Vec<u8>>, Pos, Pos) {
             grid[y][x] = v_h as u8;
         }
     }
-    (grid, src, dst)
+    (grid, src, dst, starts)
 }
 
 fn main() {
@@ -132,7 +151,7 @@ fn main() {
 
     let contents = fs::read_to_string(fp).expect("Should be able to read file");
 
-    let res1 = part1(&contents);
+    let (res1, res2) = part1(&contents);
 
-    println!("Part 1 {res1}")
+    println!("Part 1 {res1} Part 2 {res2}")
 }
