@@ -3,6 +3,7 @@ use core::hash::Hasher;
 use std::cmp::max;
 use std::collections::HashSet;
 use std::fs;
+use std::{thread, time};
 
 #[derive(Debug, Eq)]
 struct Point {
@@ -119,8 +120,8 @@ fn part1(contents: &str) -> String {
     visited.len().to_string()
 }
 
-#[cfg(debug_assertions)]
 fn printvisible(set: &HashSet<Point>, width: i16, height: i16) {
+    println!("{esc}[2J{esc}[1;1H", esc = 27 as char); // clear
     let blankline = ".".repeat(width as usize) + "\n";
     let mut blankgrid = blankline.repeat(height as usize);
     let origin = (height / 2) * (width + 1) + (width / 2);
@@ -154,8 +155,7 @@ fn part2(contents: &str) -> String {
             Err(_) => continue,
         };
 
-        // let mut rope = &ropes[0];
-        // let mut tail;
+        let mut curr: HashSet<Point> = HashSet::new();
 
         for _i in 0..dist_val {
             let mut rope_iter = ropes.iter_mut();
@@ -175,8 +175,15 @@ fn part2(contents: &str) -> String {
             }
             visited.insert(last_tail);
         }
+
+        for rope in &ropes {
+            curr.insert(create_point_from_coords(rope.head.x, rope.head.y));
+            curr.insert(create_point_from_coords(rope.tail.x, rope.tail.y));
+        }
+
+        printvisible(&curr, 64, 64);
+        thread::sleep(time::Duration::from_millis(100));
     }
-    #[cfg(debug_assertions)]
     printvisible(&visited, 32, 32);
     visited.len().to_string()
 }
