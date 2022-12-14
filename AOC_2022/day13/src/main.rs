@@ -42,7 +42,7 @@ fn part1(contents: &str) -> String {
 
         match compare_lists(&l1_vec, &l2_vec) {
             Some(true) => {
-                print!(" {index} ");
+                // print!(" {index} ");
                 index_sum += index;
             }
             Some(false) => {}
@@ -76,11 +76,11 @@ fn print_out(list: &Vec<ListItem>) {
 fn compare_lists(left_list: &Vec<ListItem>, right_list: &Vec<ListItem>) -> Option<bool> {
     let mut l_iter = left_list.iter();
     let mut r_iter = right_list.iter();
-    print_out(left_list);
-    println!("");
-    print_out(right_list);
-    println!("");
-    println!("");
+    // print_out(left_list);
+    // println!("");
+    // print_out(right_list);
+    // println!("");
+    // println!("");
     loop {
         let (l, r) = match (l_iter.next(), r_iter.next()) {
             (Some(n), Some(m)) => (n, m),
@@ -139,9 +139,16 @@ fn load_vec(
     match first_elem.starts_with("[") {
         true => {
             let mut nested = vec![];
+            let bound_elem = match first_elem.ends_with("]") {
+                true => &first_elem[1..(first_elem.len())],
+                false => &first_elem[1..],
+            };
 
-            load_vec(&first_elem[1..], &mut nested, string_iter);
-            vector_to_load.push(ListItem::Vec(nested))
+            load_vec(bound_elem, &mut nested, string_iter);
+            vector_to_load.push(ListItem::Vec(nested));
+            // if first_elem.ends_with("]") {
+            //     return;
+            // }
         }
         false => {
             let x: &[_] = &['[', ']'];
