@@ -24,12 +24,67 @@ fn part1(contents: &str) -> String {
         load_vec(line_1.next().unwrap(), &mut l1_vec, &mut line_1);
         load_vec(line_2.next().unwrap(), &mut l2_vec, &mut line_2);
 
+        match compare_lists(&l1_vec, &l2_vec) {
+            Some(true) => {
+                index_sum += index;
+            }
+            Some(false) => {}
+            None => {
+                println!("{index} {:?} {:?}", l1_vec, l2_vec);
+                panic!("Neither valid nor invalid")
+            }
+        }
+
+        index += 1;
         println!("{:?}", l1_vec);
         println!("{:?}", l2_vec);
-        println!()
+        // println!()
     }
 
-    "".to_string()
+    index_sum.to_string()
+}
+
+fn compare_lists(left_list: &Vec<ListItem>, right_list: &Vec<ListItem>) -> Option<bool> {
+    let mut l_iter = left_list.iter();
+    let mut r_iter = right_list.iter();
+
+    loop {
+        let (l, r) = match (l_iter.next(), r_iter.next()) {
+            (Some(n), Some(m)) => (n, m),
+            (Some(_n), None) => return Some(false), // Right ran out first
+            (None, Some(_m)) => return Some(true),  // Left ran out first
+            (None, None) => return None,
+        };
+
+        // Behaviour when both out needs some work
+        // need to handle when both out
+
+        match (l, r) {
+            (ListItem::Number(x), ListItem::Number(y)) => match (*y as i32) - (*x as i32) {
+                0 => {}
+                n if n > 0 => return Some(true),
+                n if n < 0 => return Some(false),
+                _ => {}
+            },
+            (ListItem::Vec(x), ListItem::Number(y)) => {
+                match compare_lists(&x, &vec![ListItem::Number(*y)]) {
+                    Some(n) => return Some(n),
+                    None => {}
+                }
+            }
+            (ListItem::Number(x), ListItem::Vec(y)) => {
+                match compare_lists(&vec![ListItem::Number(*x)], &y) {
+                    Some(n) => return Some(n),
+                    None => {}
+                }
+            }
+
+            (ListItem::Vec(x), ListItem::Vec(y)) => match compare_lists(&x, &y) {
+                Some(n) => return Some(n),
+                None => {}
+            },
+        }
+    }
 }
 
 fn load_vec(
