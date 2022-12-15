@@ -1,4 +1,5 @@
 use std::fs;
+
 use std::str::Split;
 
 #[derive(Debug)]
@@ -21,10 +22,11 @@ fn part1(contents: &str) -> String {
         let mut l1_vec: Vec<ListItem> = Vec::new();
         let mut l2_vec: Vec<ListItem> = Vec::new();
 
-        load_vec(&line_1.next().unwrap()[1..], &mut l1_vec, &mut line_1);
+        let first_elem_1 = &line_1.next().unwrap()[1..];
+        let first_elem_2 = &line_2.next().unwrap()[1..];
 
-        // return "debug".to_string();
-        load_vec(&line_2.next().unwrap()[1..], &mut l2_vec, &mut line_2);
+        load_vec_r(first_elem_1, &mut l1_vec, &mut line_1);
+        load_vec_r(first_elem_2, &mut l2_vec, &mut line_2);
 
         #[cfg(debug_assertions)]
         {
@@ -34,15 +36,9 @@ fn part1(contents: &str) -> String {
             println!("");
             println!("");
         }
-        // println!("{:?}", l1_vec);
-        // println!("{:?}", l2_vec);
-
-        // 5756 too high
-        // 5717 should be target...
 
         match compare_lists(&l1_vec, &l2_vec) {
             Some(true) => {
-                // print!(" {index} ");
                 index_sum += index;
             }
             Some(false) => {}
@@ -53,8 +49,6 @@ fn part1(contents: &str) -> String {
         }
 
         index += 1;
-
-        // println!()
     }
 
     index_sum.to_string()
@@ -131,59 +125,60 @@ fn compare_lists(left_list: &Vec<ListItem>, right_list: &Vec<ListItem>) -> Optio
     }
 }
 
-fn load_vec(
+fn load_vec_r(
     first_elem: &str,
     vector_to_load: &mut Vec<ListItem>,
     string_iter: &mut Split<'_, &str>,
-) {
-    match first_elem.starts_with("[") {
-        true => {
-            let mut nested = vec![];
-            let bound_elem = match first_elem.ends_with("]") {
-                true => &first_elem[1..(first_elem.len())],
-                false => &first_elem[1..],
-            };
-
-            load_vec(bound_elem, &mut nested, string_iter);
-            vector_to_load.push(ListItem::Vec(nested));
-            // if first_elem.ends_with("]") {
-            //     return;
-            // }
-        }
-        false => {
-            let x: &[_] = &['[', ']'];
-            match first_elem.trim_matches(x).parse::<u32>() {
-                Ok(n) => vector_to_load.push(ListItem::Number(n)),
-                Err(_) => return, // no number to return a level
-            };
-        }
-    }
-    // match first_elem.ends_with("]") {
-    //     true => return,
-    //     false => {}
-    // }
+) -> Option<String> {
+    let mut next_elem = first_elem;
     loop {
-        let next_entry = match string_iter.next() {
+        let step_res: Option<String> = match next_elem.starts_with("[") {
+            true => {
+                let mut nested = vec![];
+                let stripped_elem = &next_elem[1..];
+                let next_r = load_vec_r(stripped_elem, &mut nested, string_iter);
+                vector_to_load.push(ListItem::Vec(nested));
+
+                match next_r {
+                    Some(n) => match n.ends_with("]") {
+                        true => Some(n[..(n.len() - 1)].to_string()),
+                        false => None,
+                    },
+                    None => None,
+                }
+            }
+            false => {
+                match next_elem.ends_with("]") {
+                    true => {
+                        match next_elem.trim_end_matches("]").parse::<u32>() {
+                            Ok(n) => vector_to_load.push(ListItem::Number(n)),
+                            Err(_) => {}
+                        }
+                        return Some(next_elem.to_string());
+                    }
+                    false => match next_elem.parse::<u32>() {
+                        Ok(n) => vector_to_load.push(ListItem::Number(n)),
+                        Err(_) => panic!("no data"),
+                    },
+                }
+                None
+            }
+        };
+
+        match step_res {
+            None => {}
+            Some(n) => match n.ends_with("]") {
+                false => {}
+                true => return Some(n),
+            },
+        }
+
+        next_elem = match string_iter.next() {
             Some(n) => n,
             None => break,
         };
-
-        match next_entry.starts_with("[") {
-            true => {
-                let mut nested = vec![];
-                load_vec(&next_entry[1..], &mut nested, string_iter);
-                vector_to_load.push(ListItem::Vec(nested))
-            }
-            false => match next_entry.trim_end_matches("]").parse::<u32>() {
-                Ok(n) => vector_to_load.push(ListItem::Number(n)),
-                Err(_) => {}
-            },
-        }
-        match next_entry.ends_with("]") {
-            true => break,
-            false => {}
-        }
     }
+    None
 }
 
 fn main() {
