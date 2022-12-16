@@ -1,5 +1,5 @@
+use std::cmp::Ordering;
 use std::fs;
-
 use std::str::Split;
 
 #[derive(Debug)]
@@ -54,6 +54,64 @@ fn part1(contents: &str) -> String {
     index_sum.to_string()
 }
 
+fn part2(contents: &str) -> String {
+    let appended_contents = format!("{}{}", contents, "\n[[2]]\n[[6]]\n");
+    let packets = appended_contents.split("\n\n");
+
+    let mut all_packets: Vec<Vec<ListItem>> = Vec::new();
+
+    for packet in packets {
+        let mut p_iter = packet.split("\n");
+        let mut line_1 = p_iter.next().expect("No left packet found").split(",");
+        let mut line_2 = p_iter.next().expect("No right packet found").split(",");
+
+        let mut l1_vec: Vec<ListItem> = Vec::new();
+        let mut l2_vec: Vec<ListItem> = Vec::new();
+
+        let first_elem_1 = &line_1.next().unwrap()[1..];
+        let first_elem_2 = &line_2.next().unwrap()[1..];
+
+        load_vec_r(first_elem_1, &mut l1_vec, &mut line_1);
+        load_vec_r(first_elem_2, &mut l2_vec, &mut line_2);
+
+        all_packets.push(l1_vec);
+        all_packets.push(l2_vec);
+    }
+
+    all_packets.sort_by(|a, b| order_lists(a, b));
+
+    #[cfg(debug_assertions)]
+    for n in all_packets.iter() {
+        println!("{}", vec_to_string(&n))
+    }
+
+    let packet_1 = match all_packets
+        .iter()
+        .position(|x| vec_to_string(&x) == "[[2]]")
+    {
+        Some(n) => n + 1,
+        None => panic!("Lost first divider packet"),
+    };
+
+    let packet_2 = match all_packets
+        .iter()
+        .position(|x| vec_to_string(&x) == "[[6]]")
+    {
+        Some(n) => n + 1,
+        None => panic!("Lost second divider packet"),
+    };
+
+    (packet_1 * packet_2).to_string()
+}
+
+fn order_lists(left_list: &Vec<ListItem>, right_list: &Vec<ListItem>) -> std::cmp::Ordering {
+    match compare_lists(left_list, right_list) {
+        Some(true) => Ordering::Less,
+        Some(false) => Ordering::Greater,
+        None => Ordering::Equal,
+    }
+}
+
 #[allow(dead_code)]
 fn print_out(list: &Vec<ListItem>) {
     print!("[ ");
@@ -67,14 +125,28 @@ fn print_out(list: &Vec<ListItem>) {
     print!("]");
 }
 
+#[allow(dead_code)]
+fn vec_to_string(list: &Vec<ListItem>) -> String {
+    let mut str_rep = "[".to_owned();
+    for n in list {
+        match n {
+            ListItem::Number(x) => str_rep.push_str(&x.to_string()),
+            ListItem::Vec(y) => str_rep.push_str(&vec_to_string(&y)),
+        }
+        str_rep.push(',')
+    }
+    // print!("]");
+    if str_rep.ends_with(',') {
+        str_rep = str_rep[..(str_rep.len() - 1)].to_string();
+    }
+    str_rep.push(']');
+    str_rep
+}
+
 fn compare_lists(left_list: &Vec<ListItem>, right_list: &Vec<ListItem>) -> Option<bool> {
     let mut l_iter = left_list.iter();
     let mut r_iter = right_list.iter();
-    // print_out(left_list);
-    // println!("");
-    // print_out(right_list);
-    // println!("");
-    // println!("");
+
     loop {
         let (l, r) = match (l_iter.next(), r_iter.next()) {
             (Some(n), Some(m)) => (n, m),
@@ -82,20 +154,6 @@ fn compare_lists(left_list: &Vec<ListItem>, right_list: &Vec<ListItem>) -> Optio
             (None, Some(_m)) => return Some(true),  // Left ran out first // This might not be true
             (None, None) => return None,
         };
-
-        // Failure occuring at reading 39. One tip is to do a for instead of while (expand all pairs)
-        // That said, reading 40 is not parsing correctly
-
-        // [[1,[2,[10,8,2,1,1]],0]]
-        // [[[1]],[[[2,4,10,2],[]],3,8],[9,3,[5,[3,0],[0],[4]],6,[[9,8,3,7],4,[10,10,8],10,[6,6]]],[[[3],7,[],[10,5]],0],[5,[[3,9,0,2,1],0,[4,5,2],[6]]]]
-
-        // [[[]],[[[8,9,10,8],[6,5,4,10,10],[8,10,0,2,0],[1,7,1],[]],[[]],7]]
-        // [[],[],[8,10]]
-
-        // Behaviour when both out needs some work
-        // need to handle when both out
-
-        // It hasnt parsed the second line correctly
 
         match (l, r) {
             (ListItem::Number(x), ListItem::Number(y)) => match (*y as i32) - (*x as i32) {
@@ -192,6 +250,7 @@ fn main() {
     let contents = fs::read_to_string(fp).expect("Should be able to read file");
 
     let res1 = part1(&contents);
+    let res2 = part2(&contents);
 
-    println!("Part 1 {res1}");
+    println!("Part 1 {res1} Part 2 {res2}");
 }
