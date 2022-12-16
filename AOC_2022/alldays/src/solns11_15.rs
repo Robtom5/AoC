@@ -210,12 +210,12 @@ pub fn day11(contents: &str) -> (String, String) {
     (res1, res2)
 }
 
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+struct Pos(usize, usize);
+
 pub fn day12(contents: &str) -> (String, String) {
     const START_CHAR: char = 'S';
     const TARGET_CHAR: char = 'E';
-
-    #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-    struct Pos(usize, usize);
 
     impl Pos {
         fn successors(&self, grid: &Vec<Vec<u8>>, grid_sz: (usize, usize)) -> Vec<Pos> {
