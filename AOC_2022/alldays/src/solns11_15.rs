@@ -1,5 +1,7 @@
 use core::str::FromStr;
 use pathfinding::prelude::bfs;
+use std::cmp::max;
+use std::cmp::min;
 use std::cmp::Ordering;
 use std::str::Split;
 
@@ -491,4 +493,201 @@ pub fn day13(contents: &str) -> (String, String) {
     };
 
     (index_sum.to_string(), (packet_1 * packet_2).to_string())
+}
+
+pub fn day14(contents: &str) -> (String, String) {
+    struct Rock {
+        pts: Vec<Pos>,
+    }
+
+    impl Rock {
+        fn new() -> Rock {
+            Rock { pts: vec![] }
+        }
+
+        fn add(&mut self, new_pos: Pos) {
+            match self.pts.last() {
+                Some(pt) => {
+                    let &Pos(x0, y0) = pt;
+                    let Pos(x1, y1) = new_pos;
+                    match (x1, y1) {
+                        (x, _) if x1 == x0 => {
+                            for y in range_between(y0, y1) {
+                                self.pts.push(Pos(x, y));
+                            }
+                        }
+                        (_, y) if y1 == y0 => {
+                            for x in range_between(x0, x1) {
+                                self.pts.push(Pos(x, y));
+                            }
+                        }
+                        (x, y) => panic!("Must match either x or y. {x} {y} {x0} {y0}"),
+                    }
+                }
+                None => self.pts.push(new_pos),
+            }
+        }
+
+        fn range(&self) -> (usize, usize, usize) {
+            let x_min = self.pts.iter().min_by_key(|x| x.0).unwrap().0;
+            let x_max = self.pts.iter().max_by_key(|x| x.0).unwrap().0;
+            let y_max = self.pts.iter().max_by_key(|x| x.1).unwrap().1;
+
+            (x_min, x_max, y_max)
+        }
+    }
+
+    fn range_between(pt1: usize, pt2: usize) -> Vec<usize> {
+        match pt2 > pt1 {
+            true => (pt1..=pt2).collect(),
+            false => (pt2..=pt1).rev().collect(),
+        }
+    }
+    const SAND_START: usize = 500;
+
+    fn load_map_1(contents: &str) -> (Vec<bool>, (usize, usize, usize)) {
+        let mut x_min = SAND_START;
+        let mut x_max = 0;
+        let mut y_max = 0;
+        let mut rocks: Vec<Rock> = Vec::new();
+        for line in contents.lines() {
+            let mut line_rock = Rock::new();
+            let corners = line.split(" -> ").map(|point| {
+                let (x, y) = point.split_once(",").unwrap();
+                Pos(x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap())
+            });
+
+            for point in corners {
+                line_rock.add(point);
+            }
+
+            let (rx_min, rx_max, ry_max) = line_rock.range();
+            x_min = min(x_min, rx_min);
+            x_max = max(x_max, rx_max);
+            y_max = max(y_max, ry_max);
+            rocks.push(line_rock);
+        }
+
+        let width = (x_max + 1) - x_min;
+        let offset = x_min;
+        let height = y_max + 1;
+        let sand_start_x = SAND_START - offset;
+        let mut map: Vec<bool> = vec![false; width * height];
+
+        for rock in rocks {
+            for pt in rock.pts {
+                let &Pos(mut x, y) = &pt;
+                x -= offset;
+                let index = (y * width) + x;
+                map[index] = true;
+            }
+        }
+
+        return (map, (width, height, sand_start_x));
+    }
+
+    fn load_map_2(contents: &str) -> (Vec<bool>, (usize, usize, usize)) {
+        let mut x_min = SAND_START;
+        let mut x_max = 0;
+        let mut y_max = 0;
+        let mut rocks: Vec<Rock> = Vec::new();
+        for line in contents.lines() {
+            let mut line_rock = Rock::new();
+            let corners = line.split(" -> ").map(|point| {
+                let (x, y) = point.split_once(",").unwrap();
+                Pos(x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap())
+            });
+
+            for point in corners {
+                line_rock.add(point);
+            }
+
+            let (rx_min, rx_max, ry_max) = line_rock.range();
+            x_min = min(x_min, rx_min);
+            x_max = max(x_max, rx_max);
+            y_max = max(y_max, ry_max);
+            rocks.push(line_rock);
+        }
+
+        let offset = 0;
+        let width = x_max + (x_min - offset);
+        let height = y_max + 3;
+        let sand_start_x = SAND_START - offset;
+        let mut map: Vec<bool> = vec![false; width * height];
+
+        for rock in rocks {
+            for pt in rock.pts {
+                let &Pos(mut x, y) = &pt;
+                x -= offset;
+                let index = (y * width) + x;
+                map[index] = true;
+            }
+        }
+
+        for i in 0..width {
+            map[(height - 1) * width + i] = true
+        }
+
+        return (map, (width, height, sand_start_x));
+    }
+
+    fn assess_map(mut map: Vec<bool>, (width, height, sand_start): (usize, usize, usize)) -> i32 {
+        let mut sand_grains = 0;
+
+        let mut grain_x = sand_start;
+        let mut grain_y = 0;
+        loop {
+            match map[sand_start] {
+                true => break, // Sand at the start
+                false => {}
+            }
+            let grain_index = (grain_y * width) + grain_x;
+            match grain_y {
+                n if n == (height - 1) => break,
+                _ => {}
+            }
+            match map[grain_index + width] {
+                false => {
+                    grain_y += 1;
+                }
+                true => match grain_x {
+                    0 => break,
+                    _ => {
+                        let _ff = 2;
+                        match map[grain_index + width - 1] {
+                            false => {
+                                grain_y += 1;
+                                grain_x -= 1;
+                            }
+                            true => match grain_x {
+                                n if n == width => break,
+                                _ => match map[grain_index + width + 1] {
+                                    false => {
+                                        grain_y += 1;
+                                        grain_x += 1;
+                                    }
+                                    true => {
+                                        map[grain_index] = true;
+                                        sand_grains += 1;
+                                        grain_y = 0;
+                                        grain_x = sand_start;
+                                    }
+                                },
+                            },
+                        }
+                    }
+                },
+            }
+        }
+
+        sand_grains
+    }
+
+    let (map_1, map_1_shape) = load_map_1(&contents);
+    let (map_2, map_2_shape) = load_map_2(&contents);
+
+    let sand_1 = assess_map(map_1, map_1_shape);
+    let sand_2 = assess_map(map_2, map_2_shape);
+
+    (sand_1.to_string(), sand_2.to_string())
 }
